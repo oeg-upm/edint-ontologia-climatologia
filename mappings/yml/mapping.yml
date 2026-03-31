@@ -1,0 +1,91 @@
+prefixes:
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+  xsd: http://www.w3.org/2001/XMLSchema#
+  dct: http://purl.org/dc/terms/
+  sosa: http://www.w3.org/ns/sosa/
+  qudt: http://qudt.org/schema/qudt/
+  unit: http://qudt.org/vocab/unit/
+  time: http://www.w3.org/2006/time#
+  gsp: http://www.opengis.net/ont/geosparql#
+  schema: http://schema.org/
+  edintmed: http://vocab.linkeddata.es/datosabiertos/def/medioambiente/
+  edintkos-vars: http://vocab.linkeddata.es/datosabiertos/kos/edint/variables/
+  edintkos-foi: http://vocab.linkeddata.es/datosabiertos/kos/edint/foi/
+  edintkos-sensortypes: http://vocab.linkeddata.es/datosabiertos/kos/edint/sensortypes/
+sources:
+  data-source: ['meteo_aplanado_enriquecido.csv~csv']
+
+mappings:
+  weather_station:
+    sources:
+      - data-source
+    s: http://vocab.linkeddata.es/datosabiertos/recurso/estacionDeMedida/$(STATION_ID)
+    po:
+      - [a, edintmed:SensorPlatform]
+      - [dct:identifier, "$(STATION_ID)"]
+      - [rdfs:label, "Estacion meteorologica - $(STATION_NAME)"]
+      - [sosa:hosts, "http://vocab.linkeddata.es/datosabiertos/recurso/sensor/$(SENSOR_ID)~iri"]
+      - [gsp:hasGeometry, "http://vocab.linkeddata.es/datosabiertos/recurso/geometria/$(STATION_ID)~iri"]
+
+  station_geometry:
+    sources:
+      - data-source
+    s: http://vocab.linkeddata.es/datosabiertos/recurso/geometria/$(STATION_ID)
+    po:
+      - [a, gsp:Geometry]
+      - [gsp:asWKT, "POINT($(LONG) $(LAT))", gsp:wktLiteral]
+
+  weather_sensor:
+    sources:
+      - data-source
+    s: http://vocab.linkeddata.es/datosabiertos/recurso/sensor/$(SENSOR_ID)
+    po:
+      - [a, edintmed:EnvironmentalSensor]
+      - [dct:identifier, "$(SENSOR_ID)"]
+      - [rdfs:label, "$(SENSOR_DESC)"]
+      - [sosa:isHostedBy, "http://vocab.linkeddata.es/datosabiertos/recurso/estacionDeMedida/$(STATION_ID)~iri"]
+      - [sosa:observes, "edintkos-vars:$(OBS_PROPERTY)~iri"] # SKOS
+      - [schema:manufacturer, "http://vocab.linkeddata.es/datosabiertos/recurso/organizacion/$(MANUFACTURER)~iri"]
+      - [edintmed:hasSensorType, "edintkos-sensortypes:$(SENSOR_TYPE)~iri"] # SKOS
+
+  sensor_manufacturer:
+    sources:
+      - data-source
+    s: http://vocab.linkeddata.es/datosabiertos/recurso/organizacion/$(MANUFACTURER)
+    po:
+      - [a, schema:Organization]
+      - [rdfs:label, "$(MANUFACTURER)"]
+
+  meteorological_observation:
+    sources:
+      - data-source
+    s: http://vocab.linkeddata.es/datosabiertos/recurso/observacion/$(OBS_ID)
+    po:
+      - [a, edintmed:EnvironmentalObservation]
+      - [dct:identifier, "$(PUNTO_MUESTREO)"]
+      - [rdfs:label, "Medicion de $(OBS_PROPERTY) en $(RESULT_TIME)"]
+      - [sosa:madeBySensor, "http://vocab.linkeddata.es/datosabiertos/recurso/sensor/$(SENSOR_ID)~iri"]
+      - [sosa:observedProperty, "edintkos-vars:$(OBS_PROPERTY)~iri"] # SKOS
+      - [sosa:hasFeatureOfInterest, "edintkos-foi:$(FOI)~iri"] # SKOS
+      - [sosa:resultTime, "$(RESULT_TIME)", xsd:dateTime]
+
+      # Conexiones a los nodos de resultado y tiempo de fenomeno
+      - [sosa:hasResult, "http://vocab.linkeddata.es/datosabiertos/recurso/resultadoObservacion/$(OBS_ID)~iri"]
+      - [sosa:phenomenonTime, "http://vocab.linkeddata.es/datosabiertos/recurso/eventoFenomeno/$(OBS_ID)~iri"]
+
+  observation_result:
+    sources:
+      - data-source
+    s: http://vocab.linkeddata.es/datosabiertos/recurso/resultadoObservacion/$(OBS_ID)
+    po:
+      - [a, qudt:QuantityValue]
+      - [qudt:numericValue, $(VALUE), xsd:decimal]
+      - [qudt:unit, "unit:$(UNIT)~iri"]
+
+  phenomenon_instant:
+    sources:
+      - data-source
+    s: http://vocab.linkeddata.es/datosabiertos/recurso/eventoFenomeno/$(OBS_ID)
+    po:
+      - [a, time:Instant] # Usamos Instant puro como dicta la parte temporal basica
+      - [time:inXSDDateTime, "$(RESULT_TIME)", xsd:dateTime]
