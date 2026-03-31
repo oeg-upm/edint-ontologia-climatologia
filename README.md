@@ -9,6 +9,7 @@ Ver también: [Ontología EDINT de Sensores Medioambientales](https://github.com
 | Folder | Description |
 |--------|--------------|
 | **examples/** | Incluye ejemplos que demuestran cómo instanciar o aplicar la ontología en escenarios de datos reales. |
+| **mappings/** | Incluye mappings RML que ejemplifican la transformación de orígenes de datos en datos enlazados. |
 | **shapes/** | Contiene los SHACL utilizadas para definir y validar las restricciones de la ontología.  |
 
 
